@@ -15,6 +15,7 @@ static char cbuf[BUFSIZE+1];
 static unsigned int wcbuf[BUFSIZE+1];
 static struct symbol tval;
 char *token;		/* current token */
+int t;
 
 static unsigned char map[256] = { /* 000 nul */	0,
 				   /* 001 soh */	0,

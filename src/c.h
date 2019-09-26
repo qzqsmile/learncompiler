@@ -25,7 +25,17 @@
 #define isarray(t)    (unqual(t)->op == ARRAY)
 #define ones(n) ((n)>=8*sizeof (unsigned long) ? ~0UL : ~((~0UL)<<(n)))
 #define extend(x,ty) ((x)&(1<<(8*(ty)->size-1)) ? (x)|((~0UL)<<(8*(ty)->size-1)) : (x)&ones(8*(ty)->size))
+#define ischar(t)     ((t)->size == 1 && isint(t))
+#define isint(t)      (unqual(t)->op == INT \
+                    || unqual(t)->op == UNSIGNED)
 
+
+#define gop(name,value) name=value<<4,
+#define op(name,type,sizes)
+enum {
+#include "ops.h"
+	LASTOP
+};
 
 typedef struct list *List;
 typedef struct table *Table;
@@ -41,6 +51,7 @@ typedef struct table *Table;
 
 typedef struct field *Field;
 typedef struct symbol *Symbol;
+typedef struct tree *Tree;
 
 typedef struct {
 	unsigned printed:1;
@@ -156,6 +167,20 @@ struct symbol {
 	Xsymbol x;
 };
 
+struct tree {
+	int op;
+	Type type;
+	Tree kids[2];
+	Node node;
+	union {
+		Value v;
+		Symbol sym;
+
+		Field field;
+	} u;
+};
+
+
 enum {
 #define xx(a,b,c,d,e,f,g) a=b,
 #define yy(a,b,c,d,e,f,g)
@@ -171,6 +196,16 @@ enum {
 	V=VOID,
 	B=STRUCT
 };
+
+enum {
+	AND=38<<4,
+	NOT=39<<4,
+	OR=40<<4,
+	COND=41<<4,
+	RIGHT=42<<4,
+	FIELD=43<<4
+};
+
 extern char *firstfile;
 extern char *file;
 extern Coordinate src;
@@ -187,6 +222,7 @@ extern int Aflag;
 enum { PERM=0, FUNC, STMT };
 
 extern int where;
+extern int t;
 extern Type chartype;
 extern Type doubletype;
 extern Type floattype;
@@ -247,5 +283,17 @@ extern int gettok(void);
 extern void use(Symbol p, Coordinate src);
 extern Symbol lookup(const char *name, Table tp);
 extern void type_init(int argc, char *argv[]);
+extern void skipto(int tok, char set[]);
+extern void expect(int tok);
+extern Tree tree(int op, Type type, Tree left, Tree right);
+extern Tree texpr(Tree (*f)(int), int tok, int a);
+extern Tree root(Tree p);
+extern Tree expr1(int tok);
+extern Tree asgntree(int, Tree, Tree);
+extern Tree pointer(Tree p);
+extern Tree value(Tree p);
+extern Tree rightkid(Tree p);
+extern void test(int tok, char set[]);
+extern Tree incr(int op, Tree v, Tree e);
 
 #endif
